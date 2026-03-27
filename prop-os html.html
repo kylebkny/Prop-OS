@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Prop OS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#F5F2EC;--surface:#FDFBF7;--border:#D9D3C5;
+  --accent:#1C3A2B;--accent2:#2E5C42;--gold:#B08D57;
+  --text:#1A1A1A;--muted:#7A756C;
+  --input-bg:#EAF0EC;--input-border:#A8C4B0;
+  --red:#8B2E2E;--green:#1C3A2B;
+}
+
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;padding:40px 20px}
+.page{max-width:900px;margin:0 auto}
+
+/* ── Header ── */
+header{background:var(--accent);border-radius:4px 4px 0 0;padding:20px 28px 18px;margin-bottom:0;display:flex;justify-content:space-between;align-items:center}
+.wordmark{font-family:'DM Mono',monospace;font-size:18px;color:#fff;letter-spacing:.08em;text-transform:uppercase;font-weight:500}
+.wordmark span{color:var(--gold);letter-spacing:.05em}
+.header-actions{display:flex;gap:8px}
+.ghost-btn{background:none;border:1px solid rgba(255,255,255,.3);border-radius:3px;padding:7px 14px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;color:rgba(255,255,255,.75);cursor:pointer;text-transform:uppercase;transition:all .15s;white-space:nowrap}
+.ghost-btn:hover{border-color:#fff;color:#fff}
+.ghost-btn.primary{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.5)}
+.ghost-btn.primary:hover{background:rgba(255,255,255,.25)}
+
+.gold-bar{height:3px;background:linear-gradient(90deg,var(--gold),transparent);margin-bottom:20px;border-radius:0 0 2px 2px}
+
+/* ── Tabs ── */
+.tab-nav{display:flex;margin-bottom:20px;border-bottom:1px solid var(--border);gap:0}
+.tab-btn{padding:10px 18px;border:none;background:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ── Property selector ── */
+.prop-selector{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.prop-pill{padding:6px 14px;border:1px solid var(--border);border-radius:20px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;background:var(--surface);color:var(--muted);transition:all .15s;white-space:nowrap}
+.prop-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.prop-pill.add-pill{border-style:dashed;color:var(--gold);border-color:var(--gold)}
+.prop-pill.add-pill:hover{background:rgba(176,141,87,.1)}
+
+/* ── Card ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:24px 28px;margin-bottom:16px}
+.card-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card-title .delete-prop{font-size:10px;color:var(--red);cursor:pointer;letter-spacing:.05em;opacity:.7}
+.card-title .delete-prop:hover{opacity:1}
+
+/* ── Grid / Fields ── */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 22px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.full{grid-column:1/-1}
+label{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+input,select,textarea{background:var(--input-bg);border:1px solid var(--input-border);border-radius:3px;padding:9px 11px;font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);font-weight:500;outline:none;transition:border-color .15s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input[readonly]{background:transparent;border-color:transparent;color:var(--muted);cursor:default}
+textarea{resize:vertical;min-height:64px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:400}
+.divider{height:1px;background:var(--border);margin:4px 0;grid-column:1/-1}
+.note{font-size:11px;color:var(--muted);font-style:italic;margin-top:3px}
+
+/* ── Toggle ── */
+.toggle-group{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.toggle-btn{flex:1;padding:9px;border:none;background:transparent;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;color:var(--muted);transition:all .15s;letter-spacing:.05em}
+.toggle-btn.active{background:var(--accent);color:#fff}
+
+/* ── Results panel ── */
+.results{background:var(--accent);border-radius:4px;padding:24px 28px;margin-bottom:16px;color:#fff}
+.results .card-title{color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.15)}
+.results-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px 20px;margin-bottom:20px}
+.result-item.full{grid-column:1/-1}
+.result-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:3px}
+.result-value{font-family:'DM Serif Display',serif;font-size:20px;color:#fff;letter-spacing:-.3px}
+.result-value.large{font-size:32px;color:#C8E6C9}
+.breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:12px}
+.breakdown-row:last-child{border-bottom:none}
+.breakdown-row .blabel{color:rgba(255,255,255,.6);font-family:'DM Sans',sans-serif;font-weight:300}
+.breakdown-row .bval{font-family:'DM Mono',monospace;font-size:12px;color:#fff}
+.dti-bar-wrap{margin-top:16px;border-top:1px solid rgba(255,255,255,.15);padding-top:16px}
+.dti-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.55);margin-bottom:6px}
+.dti-bar-bg{background:rgba(255,255,255,.15);border-radius:2px;height:6px;overflow:hidden}
+.dti-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+.dti-text{font-family:'DM Mono',monospace;font-size:12px;color:#fff;margin-top:6px}
+
+/* ── Rate table ── */
+.rate-inputs{display:flex;gap:10px;margin-bottom:18px}
+.rate-inputs .field{flex:1}
+.rate-inputs input{font-size:12px;padding:7px 9px}
+.rate-table{width:100%;border-collapse:collapse}
+.rate-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.rate-table th:not(:first-child){text-align:right}
+.rate-table td{padding:10px 10px;font-family:'DM Mono',monospace;font-size:12px;border-bottom:1px solid var(--border);color:var(--muted)}
+.rate-table td:not(:first-child){text-align:right;color:var(--accent);font-weight:500}
+.rate-table tr:last-child td{border-bottom:none}
+.rate-table tr.highlight td{background:var(--input-bg)}
+.rate-table tr.highlight td:first-child{border-left:2px solid var(--accent);color:var(--accent);font-weight:500}
+
+/* ── Affordability ── */
+.afford-result{background:var(--accent);border-radius:4px;padding:22px 26px;margin-top:18px;color:#fff}
+.afford-result .rl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:5px}
+.afford-result .rv{font-family:'DM Serif Display',serif;font-size:32px;color:#C8E6C9;margin-bottom:18px}
+.afford-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;border-top:1px solid rgba(255,255,255,.15);padding-top:14px}
+.afford-stat .al{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.5);margin-bottom:3px}
+.afford-stat .av{font-family:'DM Mono',monospace;font-size:13px;color:#fff}
+
+/* ── Compare table ── */
+.compare-scroll{overflow-x:auto}
+.compare-table{width:100%;border-collapse:collapse;min-width:560px}
+.compare-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 12px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
+.compare-table th:first-child{text-align:left}
+.compare-table td{padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;border-bottom:1px solid var(--border);text-align:right;color:var(--accent)}
+.compare-table td:first-child{text-align:left;color:var(--muted);font-size:11px}
+.compare-table tr:last-child td{border-bottom:none}
+.compare-table .best{color:#1a6b38;font-weight:700}
+.compare-table .worst{color:var(--red)}
+.compare-badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:10px;margin-left:4px;font-family:'DM Mono',monospace;letter-spacing:.05em;vertical-align:middle}
+.badge-best{background:#d4edda;color:#1a6b38}
+.badge-worst{background:#f8d7da;color:var(--red)}
+.no-props{text-align:center;padding:40px 20px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:14px}
+
+/* ── Print ── */
+@media print{
+  body{background:#fff;padding:12px}
+  .no-print,.tab-nav,.prop-selector,.header-actions{display:none!important}
+  .tab-panel{display:block!important}
+  .results,.afford-result{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .card,.results{margin-bottom:10px;break-inside:avoid}
+  .page{max-width:100%}
+  input,select,textarea{border:none;background:transparent;padding:2px 0;font-size:11px}
+  input[readonly]{display:none}
+  .toggle-group{display:none}
+}
+
+@media(max-width:600px){
+  .grid,.results-grid,.grid-3,.afford-grid{grid-template-columns:1fr 1fr}
+  .field.full{grid-column:1/-1}
+  .result-item.full{grid-column:1/-1}
+  .card,.results{padding:18px}
+  .tab-btn{padding:9px 10px;font-size:10px}
+  .rate-inputs{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="wordmark">PROP <span>OS</span></div>
+  <div class="header-actions no-print">
+    <button class="ghost-btn" onclick="window.print()">⎙ Print</button>
+    <button class="ghost-btn primary" onclick="addProperty()">+ Add Property</button>
+  </div>
+</header>
+<div class="gold-bar"></div>
+
+<nav class="tab-nav no-print">
+  <button class="tab-btn active" onclick="switchTab(this,'calculator')">Calculator</button>
+  <button class="tab-btn" onclick="switchTab(this,'rates')">Rate Comparison</button>
+  <button class="tab-btn" onclick="switchTab(this,'afford')">Affordability</button>
+  <button class="tab-btn" onclick="switchTab(this,'compare')">Compare Properties</button>
+</nav>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- TAB 1: CALCULATOR                         -->
+<!-- ══════════════════════════════════════════ -->
+<div class="tab-panel active" id="tab-calculator">
+
+  <!-- Property selector pills -->
+  <div class="prop-selector no-print" id="propPills"></div>
+
+  <!-- Property form (rendered dynamically) -->
+  <div id="propForm"></div>
+
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- TAB 2: RATE COMPARISON                    -->
+<!-- ══════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-rates">
+  <div class="card">
+    <div class="card-title">Rate Comparison — current property, three scenarios</div>
+    <div class="rate-inputs">
+      <div class="field"><label>Rate 1 (%)</label><input type="text" id="rc-r1" value="6.25" oninput="calcRates()"/></div>
+      <div class="field"><label>Rate 2 (%)</label><input type="text" id="rc-r2" value="6.78" oninput="calcRates()"/></div>
+      <div class="field"><label>Rate 3 (%)</label><input type="text" id="rc-r3" value="7.25" oninput="calcRates()"/></div>
+    </div>
+    <span class="note" style="display:block;margin-bottom:18px">Pulls from active property in Calculator. ★ = current rate.</span>
+    <table class="rate-table">
+      <thead><tr>
+        <th>Rate</th><th>P&amp;I / mo</th><th>Total PITI + HOA</th>
+        <th>Total Interest (life)</th><th>Cash to Close</th>
+      </tr></thead>
+      <tbody id="rateTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- TAB 3: AFFORDABILITY                      -->
+<!-- ══════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-afford">
+  <div class="card">
+    <div class="card-title">Reverse Calculator — max purchase price from monthly budget</div>
+    <div class="grid">
+      <div class="field full">
+        <label>Target Monthly Payment (PITI + HOA)</label>
+        <input type="text" id="af-target" value="5,000" oninput="fmtInput(this);calcAfford()"/>
+      </div>
+      <div class="field">
+        <label>Down Payment ($)</label>
+        <input type="text" id="af-dp" value="400,000" oninput="fmtInput(this);calcAfford()"/>
+      </div>
+      <div class="field">
+        <label>Interest Rate (%)</label>
+        <input type="text" id="af-rate" value="6.78" oninput="calcAfford()"/>
+      </div>
+      <div class="field">
+        <label>Loan Term (years)</label>
+        <select id="af-term" onchange="calcAfford()">
+          <option value="30" selected>30 years</option>
+          <option value="20">20 years</option>
+          <option value="15">15 years</option>
+          <option value="10">10 years</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Property Tax Rate (%)</label>
+        <input type="text" id="af-tax" value="1.25" oninput="calcAfford()"/>
+      </div>
+      <div class="field">
+        <label>Annual Insurance ($)</label>
+        <input type="text" id="af-ins" value="1,500" oninput="fmtInput(this);calcAfford()"/>
+      </div>
+      <div class="field">
+        <label>HOA / mo ($)</label>
+        <input type="text" id="af-hoa" value="0" oninput="fmtInput(this);calcAfford()"/>
+      </div>
+    </div>
+    <div class="afford-result">
+      <div class="rl">Max Purchase Price</div>
+      <div class="rv" id="af-price">—</div>
+      <div class="afford-grid">
+        <div class="afford-stat"><div class="al">Max Loan</div><div class="av" id="af-loan">—</div></div>
+        <div class="afford-stat"><div class="al">P&amp;I Budget</div><div class="av" id="af-pi-budget">—</div></div>
+        <div class="afford-stat"><div class="al">Tax + Ins + HOA</div><div class="av" id="af-overhead">—</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- TAB 4: COMPARE                            -->
+<!-- ══════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-compare">
+  <div class="card">
+    <div class="card-title">Property Comparison</div>
+    <div id="compareContent"><div class="no-props">No properties saved yet. Add properties in the Calculator tab.</div></div>
+  </div>
+</div>
+
+</div><!-- end .page -->
+
+<script>
+// ════════════════════════════════════════════
+// DATA MODEL
+// ════════════════════════════════════════════
+let properties = [
+  {
+    id: 1,
+    address: '',
+    notes: '',
+    price: '850,000',
+    dpType: 'flat',
+    downFlat: '400,000',
+    downPct: '20',
+    rate: '6.78',
+    term: '30',
+    mi: '1.50',
+    fees: '10,000',
+    insType: 'flat',   // 'flat' = annual $, 'pct' = % of price
+    insFlat: '1,500',
+    insPct: '0.18',
+    propTax: '1.25',
+    hoa: '0',
+    grossIncome: '',
+  }
+];
+let activePropId = 1;
+let nextId = 2;
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+function pN(s){ return parseFloat(String(s||'').replace(/[,$%]/g,''))||0; }
+function fmt(n){ return '$'+Math.round(n).toLocaleString('en-US'); }
+function fmtBig(n){
+  if(n>=1e6) return '$'+(n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return '$'+Math.round(n/1e3)+'k';
+  return fmt(n);
+}
+function piMo(loan,annualRate,termYrs){
+  const mr=annualRate/12, n=termYrs*12;
+  if(mr===0) return loan/n;
+  return loan*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1);
+}
+function fmtInput(el){
+  const pos=el.selectionStart;
+  const prevC=(el.value.slice(0,pos).match(/,/g)||[]).length;
+  const raw=el.value.replace(/[^0-9.]/g,'');
+  const num=parseFloat(raw)||0;
+  const formatted=num?num.toLocaleString('en-US'):raw;
+  el.value=formatted;
+  const newC=(formatted.slice(0,pos).match(/,/g)||[]).length;
+  try{el.setSelectionRange(pos+(newC-prevC),pos+(newC-prevC));}catch(e){}
+}
+
+function getProp(id){ return properties.find(p=>p.id===id); }
+function getActive(){ return getProp(activePropId); }
+
+// Compute derived numbers from a property object
+function computeProp(p){
+  const price=pN(p.price);
+  const rate=pN(p.rate)/100;
+  const term=parseInt(p.term)||30;
+  const miRate=pN(p.mi)/100;
+  const fees=pN(p.fees);
+  const propTaxRate=pN(p.propTax)/100;
+  const hoa=pN(p.hoa);
+  const dp=p.dpType==='flat'
+    ? pN(p.downFlat)
+    : price*(pN(p.downPct)/100);
+  const insMonthly = p.insType==='flat'
+    ? pN(p.insFlat)/12
+    : price*(pN(p.insPct)/100)/12;
+  const dpPct=price>0?(dp/price*100):0;
+  const loan=Math.max(0,price-dp);
+  const pi=piMo(loan,rate,term);
+  const propTaxMonthly=(price*propTaxRate)/12;
+  const pmiMonthly=dpPct<20?(loan*miRate)/12:0;
+  const total=pi+propTaxMonthly+insMonthly+pmiMonthly+hoa;
+  const cashToClose=dp+fees;
+  const totalInterest=Math.max(0,pi*term*12-loan);
+  return {price,rate,term,miRate,fees,propTaxRate,hoa,dp,dpPct,insMonthly,loan,pi,propTaxMonthly,pmiMonthly,total,cashToClose,totalInterest};
+}
+
+// ════════════════════════════════════════════
+// PROPERTY MANAGEMENT
+// ════════════════════════════════════════════
+function addProperty(){
+  const p={
+    id:nextId++,
+    address:'',notes:'',
+    price:'850,000',dpType:'flat',downFlat:'400,000',downPct:'20',
+    rate:'6.78',term:'30',mi:'1.50',fees:'10,000',
+    insType:'flat',insFlat:'1,500',insPct:'0.18',
+    propTax:'1.25',hoa:'0',grossIncome:''
+  };
+  properties.push(p);
+  activePropId=p.id;
+  renderAll();
+}
+
+function deleteProperty(id){
+  if(properties.length===1){alert('At least one property required.');return;}
+  properties=properties.filter(p=>p.id!==id);
+  if(activePropId===id) activePropId=properties[0].id;
+  renderAll();
+}
+
+function setActive(id){
+  activePropId=id;
+  renderAll();
+}
+
+// Read form → save to active property
+function saveFormToModel(){
+  const p=getActive();
+  if(!p) return;
+  const v=id=>document.getElementById(id)?document.getElementById(id).value:'';
+  p.address=v('f-address');
+  p.notes=v('f-notes');
+  p.price=v('f-price');
+  p.downFlat=v('f-downFlat');
+  p.downPct=v('f-downPct');
+  p.rate=v('f-rate');
+  p.term=v('f-term');
+  p.mi=v('f-mi');
+  p.fees=v('f-fees');
+  p.insFlat=v('f-insFlat');
+  p.insPct=v('f-insPct');
+  p.propTax=v('f-propTax');
+  p.hoa=v('f-hoa');
+  p.grossIncome=v('f-grossIncome');
+}
+
+// ════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════
+function renderAll(){
+  renderPills();
+  renderForm();
+  calcRates();
+  renderCompare();
+  calcAfford();
+}
+
+function renderPills(){
+  const wrap=document.getElementById('propPills');
+  wrap.innerHTML='';
+  properties.forEach(p=>{
+    const pill=document.createElement('button');
+    pill.className='prop-pill'+(p.id===activePropId?' active':'');
+    pill.textContent=p.address||`Property ${p.id}`;
+    pill.onclick=()=>{ saveFormToModel(); setActive(p.id); };
+    wrap.appendChild(pill);
+  });
+  const add=document.createElement('button');
+  add.className='prop-pill add-pill';
+  add.textContent='+ Add Property';
+  add.onclick=addProperty;
+  wrap.appendChild(add);
+}
+
+function renderForm(){
+  const p=getActive();
+  if(!p){document.getElementById('propForm').innerHTML='';return;}
+  const c=computeProp(p);
+  const grossIncome=pN(p.grossIncome);
+  const dtiPct=grossIncome>0?(c.total/grossIncome)*100:null;
+  const dtiColor=dtiPct===null?'rgba(255,255,255,.4)':dtiPct<=28?'#6fcf97':dtiPct<=36?'#f2c94c':'#eb5757';
+
+  document.getElementById('propForm').innerHTML=`
+    <!-- Property Info -->
+    <div class="card">
+      <div class="card-title">
+        <span>Property Details</span>
+        ${properties.length>1?`<span class="delete-prop" onclick="deleteProperty(${p.id})">Remove property</span>`:''}
+      </div>
+      <div class="grid">
+        <div class="field full">
+          <label>Address / Property Name</label>
+          <input type="text" id="f-address" value="${esc(p.address)}" placeholder="e.g. 1220 Putnam Ave, Unit 2" oninput="onFieldChange()"/>
+        </div>
+        <div class="field full">
+          <label>Notes</label>
+          <textarea id="f-notes" placeholder="Renovation needed, HOA includes utilities, seller motivated…" oninput="onFieldChange()">${esc(p.notes)}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loan Inputs -->
+    <div class="card">
+      <div class="card-title">Loan Inputs</div>
+      <div class="grid">
+        <div class="field full">
+          <label>Purchase Price</label>
+          <input type="text" id="f-price" value="${p.price}" oninput="fmtInput(this);onFieldChange()"/>
+        </div>
+        <div class="field full">
+          <label>Down Payment Type</label>
+          <div class="toggle-group">
+            <button class="toggle-btn ${p.dpType==='flat'?'active':''}" id="btn-flat" onclick="setDPType('flat')">Flat ($)</button>
+            <button class="toggle-btn ${p.dpType==='pct'?'active':''}" id="btn-pct" onclick="setDPType('pct')">Percentage (%)</button>
+          </div>
+        </div>
+        <div class="field" id="field-flat" style="${p.dpType==='pct'?'display:none':''}">
+          <label>Flat Down Payment ($)</label>
+          <input type="text" id="f-downFlat" value="${p.downFlat}" oninput="fmtInput(this);onFieldChange()"/>
+        </div>
+        <div class="field" id="field-pct" style="${p.dpType==='flat'?'display:none':''}">
+          <label>Down Payment (%)</label>
+          <input type="text" id="f-downPct" value="${p.downPct}" oninput="onFieldChange()"/>
+        </div>
+        <div class="field">
+          <label>Calculated Down %</label>
+          <input type="text" readonly value="${c.dpPct.toFixed(2)}%"/>
+        </div>
+        <div class="divider"></div>
+        <div class="field">
+          <label>Interest Rate (%)</label>
+          <input type="text" id="f-rate" value="${p.rate}" oninput="onFieldChange()"/>
+        </div>
+        <div class="field">
+          <label>Loan Term</label>
+          <select id="f-term" onchange="onFieldChange()">
+            ${['30','20','15','10'].map(t=>`<option value="${t}" ${p.term===t?'selected':''}>${t} years</option>`).join('')}
+          </select>
+        </div>
+        <div class="divider"></div>
+        <div class="field">
+          <label>Mortgage Insurance (%)</label>
+          <input type="text" id="f-mi" value="${p.mi}" oninput="onFieldChange()"/>
+          <span class="note">Applied if DP &lt; 20%</span>
+        </div>
+        <div class="field">
+          <label>Mortgage Fees ($)</label>
+          <input type="text" id="f-fees" value="${p.fees}" oninput="fmtInput(this);onFieldChange()"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Costs -->
+    <div class="card">
+      <div class="card-title">Additional Costs</div>
+      <div class="grid">
+        <div class="field full">
+          <label>Property Insurance</label>
+          <div class="toggle-group" style="margin-bottom:8px">
+            <button class="toggle-btn ${p.insType==='flat'?'active':''}" onclick="setInsType('flat')">Annual $ Amount</button>
+            <button class="toggle-btn ${p.insType==='pct'?'active':''}" onclick="setInsType('pct')">% of Price</button>
+          </div>
+          <div id="ins-flat-wrap" style="${p.insType==='pct'?'display:none':''}">
+            <input type="text" id="f-insFlat" value="${p.insFlat}" placeholder="e.g. 1,500" oninput="fmtInput(this);onFieldChange()"/>
+            <span class="note">Annual premium — divided by 12 for monthly</span>
+          </div>
+          <div id="ins-pct-wrap" style="${p.insType==='flat'?'display:none':''}">
+            <input type="text" id="f-insPct" value="${p.insPct}" placeholder="e.g. 0.18" oninput="onFieldChange()"/>
+            <span class="note">% of purchase price annually (typical: 0.10–0.25%)</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Annual Property Tax Rate (%)</label>
+          <input type="text" id="f-propTax" value="${p.propTax}" oninput="onFieldChange()"/>
+        </div>
+        <div class="field">
+          <label>HOA / mo ($)</label>
+          <input type="text" id="f-hoa" value="${p.hoa}" oninput="fmtInput(this);onFieldChange()"/>
+        </div>
+        <div class="field full">
+          <label>Gross Monthly Income (optional — for DTI)</label>
+          <input type="text" id="f-grossIncome" value="${p.grossIncome}" placeholder="e.g. 15,000" oninput="fmtInput(this);onFieldChange()"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results">
+      <div class="card-title">Monthly Payment — ${esc(p.address)||'Current Property'}</div>
+      <div class="results-grid">
+        <div class="result-item full">
+          <div class="result-label">Total Monthly (PITI + HOA)</div>
+          <div class="result-value large">${fmt(c.total)}</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Loan Amount</div>
+          <div class="result-value">${fmt(c.loan)}</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Down Payment</div>
+          <div class="result-value">${fmt(c.dp)}</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Cash to Close</div>
+          <div class="result-value">${fmt(c.cashToClose)}</div>
+        </div>
+      </div>
+      <div>
+        <div class="breakdown-row"><span class="blabel">Principal &amp; Interest</span><span class="bval">${fmt(c.pi)}</span></div>
+        <div class="breakdown-row"><span class="blabel">Property Tax</span><span class="bval">${fmt(c.propTaxMonthly)}</span></div>
+        <div class="breakdown-row"><span class="blabel">Property Insurance</span><span class="bval">${fmt(c.insMonthly)}</span></div>
+        <div class="breakdown-row"><span class="blabel">Mortgage Insurance (PMI)</span><span class="bval">${c.dpPct<20?fmt(c.pmiMonthly):'N/A (≥20% down)'}</span></div>
+        <div class="breakdown-row"><span class="blabel">HOA</span><span class="bval">${c.hoa>0?fmt(c.hoa):'—'}</span></div>
+        <div class="breakdown-row"><span class="blabel">Mortgage Fees (upfront)</span><span class="bval">${fmt(c.fees)}</span></div>
+      </div>
+      ${grossIncome>0?`
+      <div class="dti-bar-wrap">
+        <div class="dti-label">Front-End DTI (housing / gross income)</div>
+        <div class="dti-bar-bg"><div class="dti-bar-fill" style="width:${Math.min(dtiPct,100)}%;background:${dtiColor}"></div></div>
+        <div class="dti-text">${dtiPct.toFixed(1)}% — ${dtiPct<=28?'✓ Within lender guideline (≤28%)':dtiPct<=36?'⚠ Above 28% threshold':'✗ Above 36% — likely disqualifying'}</div>
+      </div>`:''}
+    </div>
+  `;
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ════════════════════════════════════════════
+// FIELD CHANGE HANDLER
+// ════════════════════════════════════════════
+function onFieldChange(){
+  saveFormToModel();
+  const p=getActive();
+  if(!p) return;
+  const c=computeProp(p);
+  // Update pill label live
+  renderPills();
+  // Rerender results inline without full re-render (avoid cursor loss)
+  // We re-render the results div only
+  updateResultsInline(p,c);
+  calcRates();
+  renderCompare();
+}
+
+function updateResultsInline(p,c){
+  // Only re-render the .results div to avoid disrupting focused inputs
+  const resultsEl=document.querySelector('#propForm .results');
+  if(!resultsEl) return;
+  const grossIncome=pN(p.grossIncome);
+  const dtiPct=grossIncome>0?(c.total/grossIncome)*100:null;
+  const dtiColor=dtiPct===null?'rgba(255,255,255,.4)':dtiPct<=28?'#6fcf97':dtiPct<=36?'#f2c94c':'#eb5757';
+
+  resultsEl.innerHTML=`
+    <div class="card-title">Monthly Payment — ${esc(p.address)||'Current Property'}</div>
+    <div class="results-grid">
+      <div class="result-item full">
+        <div class="result-label">Total Monthly (PITI + HOA)</div>
+        <div class="result-value large">${fmt(c.total)}</div>
+      </div>
+      <div class="result-item">
+        <div class="result-label">Loan Amount</div>
+        <div class="result-value">${fmt(c.loan)}</div>
+      </div>
+      <div class="result-item">
+        <div class="result-label">Down Payment</div>
+        <div class="result-value">${fmt(c.dp)}</div>
+      </div>
+      <div class="result-item">
+        <div class="result-label">Cash to Close</div>
+        <div class="result-value">${fmt(c.cashToClose)}</div>
+      </div>
+    </div>
+    <div>
+      <div class="breakdown-row"><span class="blabel">Principal &amp; Interest</span><span class="bval">${fmt(c.pi)}</span></div>
+      <div class="breakdown-row"><span class="blabel">Property Tax</span><span class="bval">${fmt(c.propTaxMonthly)}</span></div>
+      <div class="breakdown-row"><span class="blabel">Property Insurance</span><span class="bval">${fmt(c.insMonthly)}</span></div>
+      <div class="breakdown-row"><span class="blabel">Mortgage Insurance (PMI)</span><span class="bval">${c.dpPct<20?fmt(c.pmiMonthly):'N/A (≥20% down)'}</span></div>
+      <div class="breakdown-row"><span class="blabel">HOA</span><span class="bval">${c.hoa>0?fmt(c.hoa):'—'}</span></div>
+      <div class="breakdown-row"><span class="blabel">Mortgage Fees (upfront)</span><span class="bval">${fmt(c.fees)}</span></div>
+    </div>
+    ${grossIncome>0?`
+    <div class="dti-bar-wrap">
+      <div class="dti-label">Front-End DTI (housing / gross income)</div>
+      <div class="dti-bar-bg"><div class="dti-bar-fill" style="width:${Math.min(dtiPct,100)}%;background:${dtiColor}"></div></div>
+      <div class="dti-text">${dtiPct.toFixed(1)}% — ${dtiPct<=28?'✓ Within lender guideline (≤28%)':dtiPct<=36?'⚠ Above 28% threshold':'✗ Above 36% — likely disqualifying'}</div>
+    </div>`:''}
+  `;
+}
+
+// ════════════════════════════════════════════
+// DP TYPE / INS TYPE TOGGLES
+// ════════════════════════════════════════════
+function setDPType(type){
+  const p=getActive(); if(!p) return;
+  p.dpType=type;
+  document.getElementById('btn-flat').classList.toggle('active',type==='flat');
+  document.getElementById('btn-pct').classList.toggle('active',type==='pct');
+  document.getElementById('field-flat').style.display=type==='flat'?'':'none';
+  document.getElementById('field-pct').style.display=type==='pct'?'':'none';
+  onFieldChange();
+}
+
+function setInsType(type){
+  const p=getActive(); if(!p) return;
+  p.insType=type;
+  document.querySelectorAll('#propForm .toggle-group')[1]
+    .querySelectorAll('.toggle-btn').forEach((b,i)=>{
+      b.classList.toggle('active',(i===0&&type==='flat')||(i===1&&type==='pct'));
+    });
+  document.getElementById('ins-flat-wrap').style.display=type==='pct'?'none':'';
+  document.getElementById('ins-pct-wrap').style.display=type==='flat'?'none':'';
+  onFieldChange();
+}
+
+// ════════════════════════════════════════════
+// RATE COMPARISON
+// ════════════════════════════════════════════
+function calcRates(){
+  const p=getActive(); if(!p) return;
+  const c=computeProp(p);
+  const baseRate=pN(p.rate)/100;
+  const rates=[
+    pN(document.getElementById('rc-r1').value)/100,
+    pN(document.getElementById('rc-r2').value)/100,
+    pN(document.getElementById('rc-r3').value)/100,
+  ];
+  const n=c.term*12;
+  const tbody=document.getElementById('rateTableBody');
+  tbody.innerHTML='';
+  rates.forEach(r=>{
+    const pi=piMo(c.loan,r,n/12);
+    const total=pi+c.propTaxMonthly+c.insMonthly+c.pmiMonthly+c.hoa;
+    const totalInterest=Math.max(0,pi*n-c.loan);
+    const isBase=Math.abs(r-baseRate)<0.00005;
+    const tr=document.createElement('tr');
+    if(isBase) tr.classList.add('highlight');
+    tr.innerHTML=`<td>${(r*100).toFixed(2)}%${isBase?' ★':''}</td><td>${fmt(pi)}</td><td>${fmt(total)}</td><td>${fmtBig(totalInterest)}</td><td>${fmt(c.cashToClose)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ════════════════════════════════════════════
+// AFFORDABILITY
+// ════════════════════════════════════════════
+function calcAfford(){
+  const target=pN(document.getElementById('af-target').value);
+  const dp=pN(document.getElementById('af-dp').value);
+  const rate=pN(document.getElementById('af-rate').value)/100;
+  const term=parseInt(document.getElementById('af-term').value);
+  const taxRate=pN(document.getElementById('af-tax').value)/100;
+  const insAnnual=pN(document.getElementById('af-ins').value);
+  const hoa=pN(document.getElementById('af-hoa').value);
+  if(!target||!rate) return;
+
+  // target = piMo(price-dp,rate,term) + price*taxRate/12 + insAnnual/12 + hoa
+  // Let K = amort factor, fixedCosts = insAnnual/12 + hoa
+  // target - fixedCosts = (price-dp)*K + price*taxRate/12
+  // target - fixedCosts + dp*K = price*(K + taxRate/12)
+  const mr=rate/12, nP=term*12;
+  const K=mr>0?(mr*Math.pow(1+mr,nP))/(Math.pow(1+mr,nP)-1):1/nP;
+  const fixedCosts=insAnnual/12+hoa;
+  const price=(target-fixedCosts+dp*K)/(K+taxRate/12);
+  const loan=Math.max(0,price-dp);
+  const pi=piMo(loan,rate,term);
+  const overhead=(price*taxRate/12)+fixedCosts;
+
+  document.getElementById('af-price').textContent=price>0?fmt(price):'—';
+  document.getElementById('af-loan').textContent=fmt(loan);
+  document.getElementById('af-pi-budget').textContent=fmt(pi);
+  document.getElementById('af-overhead').textContent=fmt(overhead);
+}
+
+// ════════════════════════════════════════════
+// COMPARE
+// ════════════════════════════════════════════
+function renderCompare(){
+  const el=document.getElementById('compareContent');
+  if(properties.length<1){
+    el.innerHTML='<div class="no-props">No properties to compare.</div>';
+    return;
+  }
+  if(properties.length===1){
+    el.innerHTML='<div class="no-props">Add at least two properties to compare.</div>';
+    return;
+  }
+
+  const computed=properties.map(p=>({p,c:computeProp(p)}));
+
+  // Find best/worst for key metrics
+  const metrics=['total','cashToClose','totalInterest','dp'];
+  const best={}, worst={};
+  metrics.forEach(m=>{
+    const vals=computed.map(x=>x.c[m]);
+    best[m]=Math.min(...vals);
+    worst[m]=Math.max(...vals);
+  });
+
+  function badge(val,metric){
+    if(computed.length<2) return '';
+    if(val===best[metric]&&best[metric]!==worst[metric]) return '<span class="compare-badge badge-best">Best</span>';
+    if(val===worst[metric]&&best[metric]!==worst[metric]) return '<span class="compare-badge badge-worst">High</span>';
+    return '';
+  }
+  function cell(val,metric){
+    const b=badge(val,metric);
+    const cls=val===best[metric]&&best[metric]!==worst[metric]?'best':val===worst[metric]&&best[metric]!==worst[metric]?'worst':'';
+    return `<td class="${cls}">${fmt(val)}${b}</td>`;
+  }
+
+  const rows=[
+    {label:'Purchase Price',    key:'price',   fn:p=>fmt(pN(p.price))},
+    {label:'Down Payment',      key:'dp',      fn:(_,c)=>fmt(c.dp),    metric:'dp'},
+    {label:'Loan Amount',       key:'loan',    fn:(_,c)=>fmt(c.loan)},
+    {label:'Total Monthly',     key:'total',   fn:(_,c)=>fmt(c.total), metric:'total'},
+    {label:'↳ P&I',            key:'pi',      fn:(_,c)=>fmt(c.pi)},
+    {label:'↳ Property Tax',   key:'ptax',    fn:(_,c)=>fmt(c.propTaxMonthly)},
+    {label:'↳ Insurance',      key:'ins',     fn:(_,c)=>fmt(c.insMonthly)},
+    {label:'↳ PMI',            key:'pmi',     fn:(_,c)=>c.dpPct<20?fmt(c.pmiMonthly):'—'},
+    {label:'↳ HOA',            key:'hoa',     fn:(_,c)=>c.hoa>0?fmt(c.hoa):'—'},
+    {label:'Cash to Close',     key:'ctc',     fn:(_,c)=>fmt(c.cashToClose), metric:'cashToClose'},
+    {label:'Total Interest',    key:'ti',      fn:(_,c)=>fmtBig(c.totalInterest), metric:'totalInterest'},
+    {label:'Down %',            key:'dpPct',   fn:(_,c)=>c.dpPct.toFixed(1)+'%'},
+  ];
+
+  el.innerHTML=`
+    <div class="compare-scroll">
+    <table class="compare-table">
+      <thead><tr>
+        <th></th>
+        ${computed.map(({p})=>`<th>${esc(p.address)||`Property ${p.id}`}</th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${rows.map(row=>`
+          <tr>
+            <td>${row.label}</td>
+            ${computed.map(({p,c})=>{
+              if(row.metric){
+                const val=c[row.metric];
+                return cell(val,row.metric);
+              }
+              return `<td>${row.fn(p,c)}</td>`;
+            }).join('')}
+          </tr>
+        `).join('')}
+        ${computed.some(({p})=>p.notes)?`
+        <tr>
+          <td>Notes</td>
+          ${computed.map(({p})=>`<td style="font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);font-weight:300">${esc(p.notes)||'—'}</td>`).join('')}
+        </tr>`:''}
+      </tbody>
+    </table>
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════
+function switchTab(btn,id){
+  saveFormToModel();
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  if(id==='compare') renderCompare();
+  if(id==='rates') calcRates();
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+renderAll();
+</script>
+</body>
+</html>
